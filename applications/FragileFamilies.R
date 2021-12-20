@@ -1,11 +1,5 @@
 library(triptych)
 
-log_score <- function(y, x) {
-  ifelse(((y==0 & x==0) | (y==1 & x==1)),
-         0,
-         -y*log(x) - (1-y) * log(1-x))
-}
-
 
 # Load the data
 FFC.pred.full <- readRDS("applications/data/FFC_predictions.rds")
@@ -26,25 +20,37 @@ FFC.layoff.full <- FFC.pred.full %>%
 
 trpt.layoff.full <- triptych(FFC.layoff.full, confidence_level = NA)
 
+
+
+# Score Decomposition
 summary(trpt.layoff.full)
+summary(trpt.layoff.full, score="log_score")
+
+
+# MCB-DSC Plots
+autoplot(trpt.layoff.full,
+         plot_type="MCBDSC",
+         MCBDSC_maxslope=1)
 
 autoplot(trpt.layoff.full,
-         plot.type="MCBDSC")
+         plot_type="MCBDSC",
+         MCBDSC_maxslope=1,
+         MCBDSC_score="log_score")
 
+# Save the MCB-DSC Plots
 ggsave(paste0("applications/plots/FFC_layoff_MCBDSC_BrierScore.pdf"),
        autoplot(trpt.layoff.full,
-                plot.type="MCBDSC") +
+                plot_type="MCBDSC",
+                MCBDSC_maxslope=1) +
          theme(aspect.ratio=NULL),
        width=14, height=12, units="cm")
 
-autoplot(trpt.layoff.full,
-         plot.type="MCBDSC",
-         MCBDSC.score="log_score")
 
 ggsave(paste0("applications/plots/FFC_layoff_MCBDSC_LogScore.pdf"),
        autoplot(trpt.layoff.full,
-                plot.type="MCBDSC",
-                MCBDSC.score="log_score") +
+                plot_type="MCBDSC",
+                MCBDSC_maxslope=1,
+                MCBDSC_score="log_score") +
          theme(aspect.ratio=NULL),
        width=14, height=12, units="cm")
 
@@ -64,10 +70,11 @@ FFC.layoff <- FFC.pred.full %>%
 trpt.layoff <- triptych(FFC.layoff)
 
 ggsave(paste0("applications/plots/FFC_layoff.pdf"),
-       autoplot(trpt.layoff,
-                Murphy.scoretype="MCB-DSC",
-                plot.linetypes = "solid"),
+       autoplot(trpt.layoff),
        width=24, height=10.5, units="cm")
+
+summary(trpt.layoff)
+summary(trpt.layoff, score="log_score")
 
 
 
@@ -87,21 +94,23 @@ FFC.jobtrain.full <- FFC.pred.full %>%
 
 trpt.jobtrain.full <- triptych(FFC.jobtrain.full, confidence_level = NA)
 
-autoplot(trpt.jobtrain.full, plot.type="MCBDSC")
-autoplot(trpt.jobtrain.full, plot.type="MCBDSC", MCBDSC.score="log_score")
+autoplot(trpt.jobtrain.full, plot_type="MCBDSC", MCBDSC_maxslope=1)
+autoplot(trpt.jobtrain.full, plot_type="MCBDSC", MCBDSC_score="log_score", MCBDSC_maxslope=1)
 summary(trpt.jobtrain.full)
 summary(trpt.jobtrain.full, score="log_score")
 
 ggsave(paste0("applications/plots/FFC_jobtrain_MCBDSC_BrierScore.pdf"),
        autoplot(trpt.jobtrain.full,
-                plot.type="MCBDSC") +
+                plot_type="MCBDSC",
+                MCBDSC_maxslope=1) +
          theme(aspect.ratio=NULL),
        width=14, height=12, units="cm")
 
 ggsave(paste0("applications/plots/FFC_jobtrain_MCBDSC_LogScore.pdf"),
        autoplot(trpt.jobtrain.full,
-                plot.type="MCBDSC",
-                MCBDSC.score="log_score") +
+                plot_type="MCBDSC",
+                MCBDSC_score="log_score",
+                MCBDSC_maxslope=1) +
          theme(aspect.ratio=NULL),
        width=14, height=12, units="cm")
 
@@ -122,10 +131,13 @@ trpt.jobtrain <- triptych(FFC.jobtrain)
 autoplot(trpt.jobtrain, plot.linetypes = "solid", Murphy.benchmark = "benchmark_logit_full")
 
 ggsave(paste0("applications/plots/FFC_jobtrain.pdf"),
-       autoplot(trpt.jobtrain,
-                Murphy.scoretype="MCB-DSC",
-                plot.linetypes = "solid"),
+       autoplot(trpt.jobtrain),
        width=24, height=10.5, units="cm")
+
+
+
+summary(trpt.jobtrain)
+summary(trpt.jobtrain, score="log_score")
 
 
 
@@ -145,24 +157,36 @@ FFC.evict.full <- FFC.pred.full %>%
   na.omit()
 
 trpt.evict.full <- triptych(FFC.evict.full, confidence_level = NA)
-autoplot(trpt.evict.full, plot.type="MCBDSC")
-autoplot(trpt.evict.full, plot.type="MCBDSC", MCBDSC.score="log_score")
+
+autoplot(trpt.evict.full, plot_type="MCBDSC", MCBDSC_maxslope=1)
+autoplot(trpt.evict.full, plot_type="MCBDSC", MCBDSC_score="log_score", MCBDSC_maxslope=1)
 summary(trpt.evict.full)
 summary(trpt.evict.full, score="log_score")
 
 
 ggsave(paste0("applications/plots/FFC_evict_MCBDSC_BrierScore.pdf"),
        autoplot(trpt.evict.full,
-                plot.type="MCBDSC") +
+                plot_type="MCBDSC",
+                MCBDSC_maxslope=1) +
          theme(aspect.ratio=NULL),
        width=14, height=12, units="cm")
 
 ggsave(paste0("applications/plots/FFC_evict_MCBDSC_LogScore.pdf"),
        autoplot(trpt.evict.full,
-                plot.type="MCBDSC",
-                MCBDSC.score="log_score") +
+                plot_type="MCBDSC",
+                MCBDSC_score="log_score",
+                MCBDSC_maxslope=1) +
          theme(aspect.ratio=NULL),
        width=14, height=12, units="cm")
+
+
+ggsave(paste0("applications/plots/FFC_evict_MCBDSC_BrierScore_Square.pdf"),
+       autoplot(trpt.evict.full,
+                plot_type="MCBDSC",
+                MCBDSC_maxslope=1) +
+         theme(aspect.ratio=NULL),
+      width=14, height=14, units="cm")
+
 
 
 # Manual Forecast Selection
@@ -179,12 +203,20 @@ FFC.evict <- FFC.pred.full %>%
 trpt.evict <- triptych(FFC.evict)
 
 ggsave(paste0("applications/plots/FFC_evict.pdf"),
-       autoplot(trpt.evict,
-                Murphy.scoretype="MCB-DSC",
-                plot.linetypes = "solid"),
+       autoplot(trpt.evict),
        width=24, height=10.5, units="cm")
 
 
+summary(trpt.evict)
+summary(trpt.evict, score="log_score")
+
+
+# Score decomposition triptych
+# CORP Decomposition Triptych
+(autoplot(trpt.evict, plot_type="Murphy", Murphy_scoretype="DSC", Murphy_benchmark="benchmark_logit_full") + ggtitle("DSC Murphy") ) +
+  (autoplot(trpt.evict, plot_type="Murphy", Murphy_scoretype="MCB", Murphy_benchmark="benchmark_logit_full") + ggtitle("MCB Murphy") ) +
+  (autoplot(trpt.evict, plot_type="Murphy", Murphy_scoretype="MCB-DSC", Murphy_benchmark="benchmark_logit_full") + ggtitle("MCB-DSC Murphy") )  +
+  plot_layout(guides = "collect") & theme(legend.position = 'bottom')
 
 
 

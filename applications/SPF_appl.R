@@ -7,33 +7,34 @@ load("applications/data/spf.gdp.long.rda")
 # Find forecasters with many issued forecasts
 spf.gdp.long %>%
   tibble::as_tibble() %>%
-  group_by(ID) %>%
+  group_by(ID,FC.Horizon) %>%
   summarize(n=n()) %>%
-  arrange(desc(n))
+  arrange(desc(n)) %>%
+  print(n=40)
 
 
 # Compare SPF average against individual forecasts
 for (h in 0:4){
   df.SPF <- spf.gdp.long %>%
     tibble::as_tibble() %>%
-    # dplyr::filter(ID %in% c(0, 84) & FC.Horizon==h) %>%
-    dplyr::filter(ID %in% c(0, 65, 84) & FC.Horizon==h) %>%
+    dplyr::filter(ID %in% c(0, 65) & FC.Horizon==h) %>%
+    # dplyr::filter(ID %in% c(0, 65, 84) & FC.Horizon==h) %>%
     dplyr::select(DATE.FC.due, Prob.Forecast, gdp.first.recess, ID) %>%
     dplyr::mutate(ID = as.factor(ID)) %>%
     dcast(DATE.FC.due + gdp.first.recess ~ ID, value.var="Prob.Forecast") %>%
     tibble::as_tibble() %>%
     dplyr::mutate(Climatology = cumsum(gdp.first.recess) / seq_along(gdp.first.recess)) %>%
     na.omit() %>%
-    dplyr::rename(y=gdp.first.recess, "SPF Average"="0", "SPF #65"="65", "SPF #84"="84") %>%
+    # dplyr::rename(y=gdp.first.recess, "SPF Average"="0", "SPF #65"="65", "SPF #84"="84") %>%
+    dplyr::rename(y=gdp.first.recess, "SPF Average"="0", "SPF #65"="65") %>%
     dplyr::select(-DATE.FC.due)
-  dim(df.SPF)[1]
 
   trpt.SPF <- triptych(df.SPF)
 
   ggsave(paste0("applications/plots/SPF_",h,"StepAhead.pdf"),
          autoplot(trpt.SPF,
-                  Murphy.scoretype = "MCB-DSC",
-                  plot.linetypes = "solid"),
+                  plot_linetypes = "solid",
+                  plot_legend_title = "forecast"),
          width=24, height=10.5, units="cm")
 }
 
@@ -59,16 +60,45 @@ trpt.SPF.horizons <- triptych(df.SPF.horizons %>%  dplyr::select(-DATE.FC.due))
 summary(trpt.SPF.horizons)
 ggsave(paste0("applications/plots/SPF_Average_Horizons.pdf"),
        autoplot(trpt.SPF.horizons,
-                Murphy.scoretype = "MCB-DSC",
-                plot.linetypes = "solid"),
+                plot_linetypes = "solid",
+                plot_legend_title = "forecast horizon"),
        width=24, height=10.5, units="cm")
 
 
 
+autoplot(trpt.SPF.horizons,
+         plot_linetypes = "solid") +
+  guides(col=guide_legend("Horizon"),
+         linetype=guide_legend("Horizon"),
+         linetype=guide_legend("Horizon"))
 
 
 
 
+# When does #65 actually issue forecasts
+spf.gdp.long %>%
+  tibble::as_tibble() %>%
+  group_by(ID,FC.Horizon) %>%
+  filter(ID==65, FC.Horizon==0) %>% pull(DATE.FC.due)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###########################################################################
+###    OLD
+###########################################################################
 
 
 
