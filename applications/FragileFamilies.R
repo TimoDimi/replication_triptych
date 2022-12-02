@@ -4,79 +4,6 @@ library(triptych)
 # Load the data
 FFC.pred.full <- readRDS("applications/data/FFC_predictions.rds")
 
-###########################################################################
-###   Layoff
-###########################################################################
-
-FFC.layoff.full <- FFC.pred.full %>%
-  filter(outcome=="layoff") %>%
-  select(challengeID, account, truth, prediction) %>%
-  mutate(prediction = pmax(0, pmin(1,prediction))) %>%
-  dcast(challengeID + truth ~ account) %>%
-  tibble::as_tibble() %>%
-  select(-challengeID) %>%
-  rename(y=truth)  %>%
-  na.omit()
-
-trpt.layoff.full <- triptych(FFC.layoff.full, confidence_level = NA)
-
-
-
-# Score Decomposition
-summary(trpt.layoff.full)
-summary(trpt.layoff.full, score="log_score")
-
-
-# MCB-DSC Plots
-autoplot(trpt.layoff.full,
-         plot_type="MCBDSC",
-         MCBDSC_maxslope=1)
-
-autoplot(trpt.layoff.full,
-         plot_type="MCBDSC",
-         MCBDSC_maxslope=1,
-         MCBDSC_score="log_score")
-
-# Save the MCB-DSC Plots
-ggsave(paste0("applications/plots/FFC_layoff_MCBDSC_BrierScore.pdf"),
-       autoplot(trpt.layoff.full,
-                plot_type="MCBDSC",
-                MCBDSC_maxslope=1) +
-         theme(aspect.ratio=NULL),
-       width=14, height=12, units="cm")
-
-
-ggsave(paste0("applications/plots/FFC_layoff_MCBDSC_LogScore.pdf"),
-       autoplot(trpt.layoff.full,
-                plot_type="MCBDSC",
-                MCBDSC_maxslope=1,
-                MCBDSC_score="log_score") +
-         theme(aspect.ratio=NULL),
-       width=14, height=12, units="cm")
-
-
-
-### Manual Forecast Selection
-FFC.layoff <- FFC.pred.full %>%
-  filter(outcome=="layoff" & account %in% c("amaatouq", "ruoyangp", "Pentlandians", "benchmark_logit_full")) %>%
-  select(challengeID, account, truth, prediction) %>%
-  mutate(prediction = pmax(0, pmin(1,prediction))) %>%
-  dcast(challengeID + truth ~ account) %>%
-  tibble::as_tibble() %>%
-  select(-challengeID) %>%
-  rename(y=truth)  %>%
-  na.omit()
-
-trpt.layoff <- triptych(FFC.layoff)
-
-ggsave(paste0("applications/plots/FFC_layoff.pdf"),
-       autoplot(trpt.layoff),
-       width=24, height=10.5, units="cm")
-
-summary(trpt.layoff)
-summary(trpt.layoff, score="log_score")
-
-
 
 ###########################################################################
 ###   Job Training
@@ -94,25 +21,33 @@ FFC.jobtrain.full <- FFC.pred.full %>%
 
 trpt.jobtrain.full <- triptych(FFC.jobtrain.full, confidence_level = NA)
 
-autoplot(trpt.jobtrain.full, plot_type="MCBDSC", MCBDSC_maxslope=1)
-autoplot(trpt.jobtrain.full, plot_type="MCBDSC", MCBDSC_score="log_score", MCBDSC_maxslope=1)
+# Set point colors
+MCBDSC_point_cols_JobTrain <- rep("black", length(trpt.jobtrain.full$FC_names))
+names(MCBDSC_point_cols_JobTrain) <- trpt.jobtrain.full$FC_names
+MCBDSC_point_cols_JobTrain[str_subset(names(MCBDSC_point_cols_JobTrain), pattern = "benchmark")] <- gg_color_hue(4)[2]
+
+MCBDSC_JobTrain <- autoplot(trpt.jobtrain.full,
+                            plot_type="MCBDSC",
+                            MCBDSC_MCB_xlim=c(0,0.011),
+                            MCBDSC_point_cols=MCBDSC_point_cols_JobTrain)
+
 summary(trpt.jobtrain.full)
+
+MCBDSC_LogScore_JobTrain <- autoplot(trpt.jobtrain.full,
+                                     plot_type="MCBDSC",
+                                     MCBDSC_score="log_score",
+                                     MCBDSC_MCB_xlim=c(0,0.011),
+                                     MCBDSC_point_cols=MCBDSC_point_cols_JobTrain)
+
 summary(trpt.jobtrain.full, score="log_score")
 
 ggsave(paste0("applications/plots/FFC_jobtrain_MCBDSC_BrierScore.pdf"),
-       autoplot(trpt.jobtrain.full,
-                plot_type="MCBDSC",
-                MCBDSC_maxslope=1) +
-         theme(aspect.ratio=NULL),
-       width=14, height=12, units="cm")
+       MCBDSC_JobTrain,
+       width=14, height=14, units="cm")
 
 ggsave(paste0("applications/plots/FFC_jobtrain_MCBDSC_LogScore.pdf"),
-       autoplot(trpt.jobtrain.full,
-                plot_type="MCBDSC",
-                MCBDSC_score="log_score",
-                MCBDSC_maxslope=1) +
-         theme(aspect.ratio=NULL),
-       width=14, height=12, units="cm")
+       MCBDSC_LogScore_JobTrain,
+       width=14, height=14, units="cm")
 
 
 
@@ -158,26 +93,32 @@ FFC.evict.full <- FFC.pred.full %>%
 
 trpt.evict.full <- triptych(FFC.evict.full, confidence_level = NA)
 
-autoplot(trpt.evict.full, plot_type="MCBDSC", MCBDSC_maxslope=1)
-autoplot(trpt.evict.full, plot_type="MCBDSC", MCBDSC_score="log_score", MCBDSC_maxslope=1)
-summary(trpt.evict.full)
-summary(trpt.evict.full, score="log_score")
+
+# Set point colors
+MCBDSC_point_cols_Evict <- rep("black", length(trpt.evict.full$FC_names))
+names(MCBDSC_point_cols_Evict) <- trpt.evict.full$FC_names
+MCBDSC_point_cols_Evict[str_subset(names(MCBDSC_point_cols_Evict), pattern = "benchmark")] <- gg_color_hue(4)[2]
+
+MCBDSC_Evict <- autoplot(trpt.evict.full,
+                         plot_type="MCBDSC",
+                         MCBDSC_MCB_xlim=c(0,0.006),
+                         MCBDSC_point_cols=MCBDSC_point_cols_Evict)
+
+MCBDSC_LogScore_Evict <- autoplot(trpt.evict.full,
+                                  plot_type="MCBDSC",
+                                  MCBDSC_score="log_score",
+                                  MCBDSC_MCB_xlim=c(0,0.03),
+                                  MCBDSC_point_cols=MCBDSC_point_cols_Evict)
 
 
 ggsave(paste0("applications/plots/FFC_evict_MCBDSC_BrierScore.pdf"),
-       autoplot(trpt.evict.full,
-                plot_type="MCBDSC",
-                MCBDSC_maxslope=1) +
-         theme(aspect.ratio=NULL),
-       width=14, height=12, units="cm")
+       MCBDSC_Evict,
+       width=14, height=14, units="cm")
 
 ggsave(paste0("applications/plots/FFC_evict_MCBDSC_LogScore.pdf"),
-       autoplot(trpt.evict.full,
-                plot_type="MCBDSC",
-                MCBDSC_score="log_score",
-                MCBDSC_maxslope=1) +
-         theme(aspect.ratio=NULL),
-       width=14, height=12, units="cm")
+       MCBDSC_LogScore_Evict,
+       width=14, height=14, units="cm")
+
 
 
 ggsave(paste0("applications/plots/FFC_evict_MCBDSC_BrierScore_Square.pdf"),
@@ -203,7 +144,9 @@ FFC.evict <- FFC.pred.full %>%
 trpt.evict <- triptych(FFC.evict)
 
 ggsave(paste0("applications/plots/FFC_evict.pdf"),
-       autoplot(trpt.evict),
+       autoplot(trpt.evict,
+                Murphy_scoretype = "score",
+                Murphy_RelDiag_range=c(0,0.38)),
        width=24, height=10.5, units="cm")
 
 
@@ -218,6 +161,80 @@ summary(trpt.evict, score="log_score")
   (autoplot(trpt.evict, plot_type="Murphy", Murphy_scoretype="MCB-DSC", Murphy_benchmark="benchmark_logit_full") + ggtitle("MCB-DSC Murphy") )  +
   plot_layout(guides = "collect") & theme(legend.position = 'bottom')
 
+
+
+
+
+###########################################################################
+###   Layoff
+###########################################################################
+
+FFC.layoff.full <- FFC.pred.full %>%
+  filter(outcome=="layoff") %>%
+  select(challengeID, account, truth, prediction) %>%
+  mutate(prediction = pmax(0, pmin(1,prediction))) %>%
+  dcast(challengeID + truth ~ account) %>%
+  tibble::as_tibble() %>%
+  select(-challengeID) %>%
+  rename(y=truth)  %>%
+  na.omit()
+
+trpt.layoff.full <- triptych(FFC.layoff.full, confidence_level = NA)
+
+
+
+# Score Decomposition
+summary(trpt.layoff.full)
+summary(trpt.layoff.full, score="log_score")
+
+
+# MCB-DSC Plots
+autoplot(trpt.layoff.full,
+         plot_type="MCBDSC")
+
+autoplot(trpt.layoff.full,
+         plot_type="MCBDSC",
+         MCBDSC_maxslope=1,
+         MCBDSC_score="log_score")
+
+# Save the MCB-DSC Plots
+ggsave(paste0("applications/plots/FFC_layoff_MCBDSC_BrierScore.pdf"),
+       autoplot(trpt.layoff.full,
+                plot_type="MCBDSC",
+                MCBDSC_maxslope=1) +
+         theme(aspect.ratio=NULL),
+       width=14, height=12, units="cm")
+
+
+ggsave(paste0("applications/plots/FFC_layoff_MCBDSC_LogScore.pdf"),
+       autoplot(trpt.layoff.full,
+                plot_type="MCBDSC",
+                MCBDSC_maxslope=1,
+                MCBDSC_score="log_score") +
+         theme(aspect.ratio=NULL),
+       width=14, height=12, units="cm")
+
+
+
+### Manual Forecast Selection
+FFC.layoff <- FFC.pred.full %>%
+  filter(outcome=="layoff" & account %in% c("amaatouq", "ruoyangp", "Pentlandians", "benchmark_logit_full")) %>%
+  select(challengeID, account, truth, prediction) %>%
+  mutate(prediction = pmax(0, pmin(1,prediction))) %>%
+  dcast(challengeID + truth ~ account) %>%
+  tibble::as_tibble() %>%
+  select(-challengeID) %>%
+  rename(y=truth)  %>%
+  na.omit()
+
+trpt.layoff <- triptych(FFC.layoff)
+
+ggsave(paste0("applications/plots/FFC_layoff.pdf"),
+       autoplot(trpt.layoff),
+       width=24, height=10.5, units="cm")
+
+summary(trpt.layoff)
+summary(trpt.layoff, score="log_score")
 
 
 

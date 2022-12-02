@@ -18,8 +18,8 @@ df_C1 <- SF.FC.C1 %>%
 trpt_C1 <- triptych(df_C1)
 
 p_C1 <- autoplot(trpt_C1,
-                plot_linetypes="solid",
-                size_axislabels=12)
+                 plot_linetypes="solid",
+                 size_axislabels=12)
 
 ggsave(paste0("applications/plots/triptych_C1Flares.pdf"),
        p_C1,
@@ -155,7 +155,7 @@ df_M1 <- SF.FC.M1 %>%
 # M1 Triptych
 trpt_M1 <- triptych(df_M1)
 p_M1 <- autoplot(trpt_M1,
-                 plot_linetypes="solid",
+                 Murphy_scoretype = "score",
                  size_axislabels=12)
 ggsave(paste0("applications/plots/triptych_M1Flares.pdf"),
        p_M1,

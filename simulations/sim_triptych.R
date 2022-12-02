@@ -6,30 +6,79 @@ library(triptych)
 
 set.seed(1)
 n <- 10000
-alpha.set <- c(0.1,0.5,1,2,5)
 
 p0 <- runif(n)
 rlz <- rbinom(n, 1, p0)
 
-for (i.alpha in 1:length(alpha.set)){
-  alpha <- alpha.set[i.alpha]
-  p1 <- 3/8 + 1/4*p0^alpha
-  p2 <- p0^alpha
-  p.df <- data.frame(y=rlz, uncalibrated=p1, calibrated=p2)
+p1 <- 3/8 + 1/4*p0
+p2 <- p0
+p.df <- data.frame(y=rlz, uncalibrated=p1, calibrated=p2)
 
-  trpt.SimA <- triptych(p.df)
-  ggsave(paste0("./simulations/plots/SimA_alpha",alpha,".pdf"),
-         autoplot(trpt.SimA,
-                  plot_linetypes="solid"),
-         width = 24, height = 10.5, units = "cm")
-}
-
-
-
+trpt_SimA <- triptych(p.df)
+ggsave(paste0("./simulations/plots/SimA.pdf"),
+       autoplot(trpt_SimA,
+                Murphy_scoretype="score"),
+       width = 24, height = 10.5, units = "cm")
 
 
 ###########################################################################
-###   Sim Design (B): Perfect Calibration
+###   Sim Design (B): Perfect Calibration and 1 ROC/Murphy Crossing Point
+
+set.seed(1)
+n <- 10000
+
+p0 <- runif(n)
+rlz <- rbinom(n, 1, p0)
+
+p1 <- ifelse((p0 >= 1/4 & p0 <= 3/4), 1/2, p0)
+
+p0_hlp <- ifelse((p0 < 1/4), 1/8, p0)
+p2 <- ifelse((p0_hlp > 3/4), 7/8, p0_hlp)
+
+
+p.df <- data.frame(y=rlz, p1=p1, p2=p2)
+
+trpt_SimB <- triptych(p.df)
+
+p_test <- autoplot(trpt_SimB,
+                   Murphy_scoretype="score")
+
+ggsave(paste0("./simulations/plots/SimB.pdf"),
+       width = 24, height = 10.5, units = "cm")
+
+
+### Manual plots with crossing points
+p_hlp_Murphy <- autoplot(trpt_SimB,
+                         Murphy_scoretype="score",
+                         plot_type="Murphy") +
+  geom_point(data = .%>%filter(forecast=="p1", theta %in% c(0.25,0.75)),
+             aes(x=theta, y=elem_score), col="black")
+
+p_hlp_ROC <- autoplot(trpt_SimB,
+                      Murphy_scoretype="score",
+                      plot_type="ROC") +
+  geom_point(data = .%>%filter(forecast=="p1", row_number() %in% c(21,22)),
+             aes(x=1-specificities, y=sensitivities), col="black")
+# Manually identify the values 0.43471306 and 0.93561288 for specificities
+
+p_hlp_RelDiag <- autoplot(trpt_SimB,
+                      Murphy_scoretype="score",
+                      plot_type="ReliabilityDiagram")
+
+width <- 0.5
+plot_margins <- grid::unit(c(0,0.02,0,0.02), "npc")
+p_triptych <- (p_hlp_Murphy + ggplot2::theme(aspect.ratio = NULL)) +
+  (p_hlp_RelDiag + ggplot2::theme(aspect.ratio = NULL) + theme(plot.margin = plot_margins)) +
+  (p_hlp_ROC + ggplot2::theme(aspect.ratio = NULL)) +
+  plot_layout(guides = "collect", width=c(1,width,1)) & theme(legend.position = 'bottom') +
+  ggplot2::theme(aspect.ratio = 1)
+
+ggsave(paste0("./simulations/plots/SimB_points.pdf"),
+       p_triptych,
+       width = 24, height = 10.5, units = "cm")
+
+###########################################################################
+###   Sim Design (C): Perfect Calibration
 
 set.seed(1)
 n <- 10000
@@ -48,12 +97,19 @@ p4 <- pnorm( (a1+a2+a3+a4)/sqrt(1) )
 
 p.df.B <- data.frame(y=rlz, p1=p1, p2=p2, p3=p3, p4=p4)
 trpt.SimB <- triptych(p.df.B)
-ggsave(paste0("./simulations/plots/SimB.pdf"),
+ggsave(paste0("./simulations/plots/SimC.pdf"),
        autoplot(trpt.SimB,
-                plot_linetypes="solid"),
+                Murphy_scoretype="score"),
        width = 24, height = 10.5, units = "cm")
 
 
+
+
+
+###########################################################################
+###########################################################################
+###########################################################################
+# OLD
 
 
 

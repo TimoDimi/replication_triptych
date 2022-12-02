@@ -1,7 +1,7 @@
 library(devtools)
 
 # Installation of the package from Github:
-install_github("TimoDimi/triptych", auth_token = "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")
+install_github("TimoDimi/triptych", auth_token = "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", force=TRUE)
 
 library(triptych)
 
