@@ -36,6 +36,7 @@ MCBDSC_Evict <- autoplot(trpt.evict.full,
 MCBDSC_LogScore_Evict <- autoplot(trpt.evict.full,
                                   plot_type="MCBDSC",
                                   MCBDSC_score="log_score",
+                                  MCBDSC_UNC_hjust=0.7,
                                   MCBDSC_MCB_xlim=c(0,0.038),
                                   MCBDSC_point_cols=MCBDSC_point_cols_Evict) +
   ggtitle("(b) Logarithmic Score") +

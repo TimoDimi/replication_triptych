@@ -172,7 +172,7 @@ for (setting_choice in c("A", "B", "C")){
   p_Murphy <- ggplot(df_Murphy) +
     geom_line(aes(x=theta, y=el_score, col=FC)) +
     theme_bw() +
-    xlab(expression("Parameter "*theta)) +
+    xlab(expression("Threshold "*theta)) +
     ylab("Mean elementary score") +
     ggtitle("Murphy Curve") +
     scale_colour_manual(values=sim_plot_cols) +

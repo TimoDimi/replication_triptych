@@ -43,6 +43,7 @@ ggplot2::autoplot
 #' @param MCBDSC_repel TRUE if a "repel" geom should be used for better visibility of the text labels in the MCB-DSC plot
 #' @param MCBDSC_MCB_xlim bivariate vector specifying x-axis limits in the MCB-DSC plot
 #' @param MCBDSC_DSC_ylim bivariate vector specifying y-axis limits in the MCB-DSC plot
+#' @param MCBDSC_UNC_hjust position (between 0 and 1) of the UNC label
 #' @param plot_cols Named vector (with the forecasts) specifying the plot colors in the triptych. Default NA uses a standard color palette.
 #' @param plot_linetypes Linetypes in the triptych plots
 #' @param plot_linewidth Linewidth in the triptych plots
@@ -72,6 +73,7 @@ autoplot.triptych <- function(obj,
                               MCBDSC_repel=FALSE,
                               MCBDSC_MCB_xlim=NA,
                               MCBDSC_DSC_ylim=NA,
+                              MCBDSC_UNC_hjust=0.85,
                               plot_cols=NA,
                               plot_linetypes="solid",
                               plot_linewidth=0.5,
@@ -264,7 +266,7 @@ autoplot.triptych <- function(obj,
     geom_line(size=plot_linewidth) +
     ggplot2::scale_color_manual(values = plot_cols) +
     ggplot2::scale_linetype_manual(values = plot_linetypes) +
-    xlab(expression("Parameter "*theta)) +
+    xlab(expression("Threshold "*theta)) +
     ylab(Murphy_ylabel) +
     ggtitle("Murphy Curve") +
     coord_cartesian(xlim = Murphy_RelDiag_range) +
@@ -324,16 +326,37 @@ autoplot.triptych <- function(obj,
   df_abline <- data.frame(slope = 1,
                           score = pretty(unique(FCs_MCBDSC_plot$uncertainty) - c(-1.1*MCBDSC_MCB_xlim[2], MCBDSC_DSC_ylim[2]), n=MCBDSC_lines)) %>%
     mutate(intercept = unique(FCs_MCBDSC_plot$uncertainty) - score,
-           label=score)
-
+           label = score)
 
   # replicate MCBDSC_point_cols if it has length 1
   if (length(MCBDSC_point_cols)==1 & nrow(FCs_MCBDSC_plot) > 1){MCBDSC_point_cols <- rep(MCBDSC_point_cols,nrow(FCs_MCBDSC_plot))}
+
+  # Remove a line if its intercept is too close to zero (less than 1/5 times the line distance).
+  line_distance <- -diff(df_abline$intercept)[1]
+  if (min(abs(df_abline$intercept)) < line_distance/5) {
+    df_abline <- df_abline %>% slice(-which.min(abs(intercept)))
+  }
+
+  # df_UNC for the zero DSC (or UNC) line
+  df_UNC <- tibble(intercept=0, slope=1, label=paste0("UNC: ", prettyNum(FCs_MCBDSC_plot$uncertainty[1], digits=3)))
 
 
   # MCB-DSC plot
   p_MCBDSC <- ggplot(data=FCs_MCBDSC_plot
                      %>% arrange(mean_score, discrimination)) +
+    # geom_abline(data=df_UNC,
+    #             aes(intercept=intercept, slope=slope), colour=gg_color_hue(5)[3], size=1) +
+    geom_segment(data=df_UNC,
+                 aes(x=0, y=0,
+                     xend=2*max(MCBDSC_MCB_xlim, MCBDSC_DSC_ylim),
+                     yend=2*max(MCBDSC_MCB_xlim, MCBDSC_DSC_ylim)),
+                 colour=gg_color_hue(5)[3], size=1) +
+    geom_point(data=tibble(x=0,y=0),
+               aes(x=x,y=y),
+               colour=gg_color_hue(5)[3], fill=gg_color_hue(5)[3], size=2, shape=15) +
+    geomtextpath::geom_labelabline(data = df_UNC,
+                                   aes(intercept = intercept, slope = slope, label = label),
+                                   colour=gg_color_hue(5)[3], hjust = MCBDSC_UNC_hjust, size = 7 * 0.36, text_only = TRUE, boxcolour = NA, straight = TRUE) +
     geom_abline(data=df_abline,
                 aes(intercept=intercept, slope=slope), colour="gray50") +
     geomtextpath::geom_labelabline(data = df_abline,

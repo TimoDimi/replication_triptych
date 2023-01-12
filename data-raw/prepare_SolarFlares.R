@@ -21,7 +21,7 @@ save(df_C1full, file = "data/C1_flares.rda")
 
 
 # Prepare M1 SOLAR FLARE FORECASTS ############################################
-load("data/SF.FC.M1.rda")
+load("data-raw/SF.FC.M1.rda")
 
 M1_FCnames_all <- c("AMOS", "ASAP", "ASSA", "BOM", "CLIM120", "DAFFS", "DAFFS-G",
                     "MAG4VW", "MAG4VWF", "MAG4W", "MAG4WF", "MCEVOL", "MCSTAT",

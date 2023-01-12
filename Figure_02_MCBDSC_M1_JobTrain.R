@@ -44,6 +44,11 @@ load("data/FFC_JobTraining.rda")
 
 trpt.jobtrain.full <- triptych(FFC.jobtrain.full, confidence_level = NA)
 
+# Set point colors
+MCBDSC_point_cols_JobTrain <- rep("black", length(trpt.jobtrain.full$FC_names))
+names(MCBDSC_point_cols_JobTrain) <- trpt.jobtrain.full$FC_names
+MCBDSC_point_cols_JobTrain[str_subset(names(MCBDSC_point_cols_JobTrain), pattern = "benchmark")] <- gg_color_hue(5)[3]
+
 MCBDSC_JobTrain <- autoplot(trpt.jobtrain.full,
                             plot_type="MCBDSC",
                             MCBDSC_MCB_xlim=c(0,0.011),

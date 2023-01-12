@@ -14,6 +14,13 @@ load(file = "data/M1_flares.rda")
 # MCB-DSC Plot of all M1 forecasts
 trpt_M1full <- triptych(df_M1full, confidence_level = NA)
 
+
+# Assign plot colors
+plot_cols_M1 <- c("NICT"=gg_color_hue(6)[2],
+                  "NOAA"=gg_color_hue(4)[2],
+                  "ASSA"=gg_color_hue(6)[5],
+                  "MCSTAT"=gg_color_hue(4)[4])
+
 MCBDSC_point_cols_M1 <- c("AMOS"="black",
                           "ASAP"="black",
                           plot_cols_M1[3],    # ASSA
