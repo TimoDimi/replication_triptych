@@ -17,9 +17,10 @@ C1_FC_names <- c("NOAA","SIDC", "ASSA", "MCSTAT")
 df_RunExmpl <- df_C1full %>%
   dplyr::select(c("y", C1_FC_names))
 
+trpt_RunExmpl <- triptych(df_RunExmpl)
 
 #     Illustration ROC Curves     ##############################################
-ROC_RunExmlp_Raw <- autoplot(triptych(df_RunExmpl),
+ROC_RunExmlp_Raw <- autoplot(trpt_RunExmpl,
                              plot_type="ROC",
                              plot_linetypes="solid",
                              plot_cols = gg_color_hue(4)[c(2,1,3,4)],

@@ -25,7 +25,7 @@ SPF_clean <- spf.gdp.long %>%
 
 
 ################################################################################
-# Part (A) Compare the SPF average on different forecast horizons
+# Figure 9: Compare the SPF average on different forecast horizons
 
 h_set_avg <- c(0,1,2,4)
 
@@ -56,7 +56,7 @@ ggsave(paste0("plots/Fig10_triptych_SPF_Consensus.pdf"),
 
 
 ################################################################################
-# Part (B): Compare SPF average and SPF #65
+# Table 3: Compare SPF average and SPF #65
 
 # FCs in wide tibble format including the climatology
 SPF_wide <- SPF_clean %>%
@@ -89,14 +89,9 @@ for (h in h_set_plot){
   trpt_SPF <- triptych(df_SPF_trpt)
   SPF_score_decomp <- bind_rows(SPF_score_decomp,
                                 summary(trpt_SPF$RelDiag) %>% mutate(h=h))
-
-  ggsave(paste0("applications/plots/SPF_",h,"StepAhead.pdf"),
-         autoplot(trpt_SPF,
-                  Murphy_scoretype = "score",
-                  plot_cols= gg_color_hue(3)[c(2,1,3)]),
-         width=24, height=10.5, units="cm")
 }
 
+# Table 3:
 SPF_score_decomp
 
 
