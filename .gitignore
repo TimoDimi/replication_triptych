@@ -1,4 +1,6 @@
-applications/data-raw/submission.csv
+# excluded data files
+/data-raw/submissions.csv
+/data-raw/benchmarks_long.csv
 
 
 # History files
@@ -7,6 +9,7 @@ applications/data-raw/submission.csv
 
 # Session Data files
 .RData
+**/.DS_Store
 
 # User-specific files
 .Ruserdata
