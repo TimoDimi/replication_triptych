@@ -1,5 +1,3 @@
-
-
 #' Print method
 #'
 #' @param obj
@@ -10,7 +8,7 @@
 #'
 #' @examples
 print.triptych <- function(obj, ...) {
-  print(autoplot(obj, ...))
+  print(ggplot2::autoplot(obj, ...))
   paste("Nothing printed yet")
   # print(summary(obj, ...))
   invisible(obj)
