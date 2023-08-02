@@ -361,7 +361,11 @@ autoplot.triptych <- function(object,
 
 
     # Set to default values if NA
-    pick_limits <- function(x) c(0, 1.1 * max(x[is.finite(x)]))
+    pick_limits <- function(x){
+      a = ifelse(confidence, 1.3,1.1)
+      c(0, a * max(x[is.finite(x)]))
+    }
+
     if (anyNA(MCB_lim)) {
       MCB_lim <- pick_limits(score_decomp$MCB)
     }
