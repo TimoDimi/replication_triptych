@@ -81,6 +81,7 @@ autoplot.triptych <- function(object,
   ### Preliminaries
   FC_names <- object$FC_names
   m <- length(FC_names)
+  confidence = ifelse(is.null(object$mcb_dsc_samples), FALSE,TRUE)
 
   # Set nice tick labels in the reliability diagram. First try, could be more elaborate
   Murphy_RelDiag_range_labels <- c(
@@ -98,7 +99,7 @@ autoplot.triptych <- function(object,
       plot_type <- "MCBDSC"
       message(paste0(
         "The MCB-DSC display is plotted as default for more than 4 forecasts.\n",
-        "Use the option plot.type='triptych' to obtain a triptych nevertheless."
+        "Use the option plot_type='triptych' to obtain a triptych nevertheless."
       ))
     }
   }
@@ -206,15 +207,23 @@ autoplot.triptych <- function(object,
 
   ###############################################################################################
   ### Plot ROC Curves
-
   p_ROC <- quote({
     df_roc <- object$roc
     if (PAV_ROC) {
       df_roc <- filter(df_roc, PAV)
     }
-    ggplot2::ggplot(df_roc, aes(x = 1 - specificities, y = sensitivities)) +
+    proc = ggplot2::ggplot(df_roc, aes(x = 1 - specificities, y = sensitivities)) +
       geom_segment(aes(x = 0, y = 0, xend = 1, yend = 1), linewidth = plot_linewidth / 3, colour = "black") +
-      geom_path(aes(col = forecast, linetype = forecast), linewidth = plot_linewidth) +
+      geom_path(aes(color = forecast, linetype = forecast), linewidth = plot_linewidth)
+    if(confidence == TRUE){
+      polygon_data = data.frame(forecast = c(df_roc$forecast,rev(df_roc$forecast)), sens = c(df_roc$sensitivities_upper,rev(df_roc$sensitivities_lower)), spec = c(df_roc$specificities_upper,rev(df_roc$specificities_lower)))
+      proc = proc + geom_polygon(data = polygon_data, aes(x = 1 - spec, y = sens, fill = forecast), alpha = 0.1, show.legend = FALSE) +
+        facet_wrap(. ~ factor(forecast, levels = FC_names), nrow = nr_rows) +
+        scale_x_continuous(breaks = c(0,0.5,1)) +
+        scale_y_continuous(breaks = c(0,0.5,1)) +
+        scale_fill_manual(values = plot_cols)
+    }
+    proc = proc +
       ggplot2::scale_color_manual(values = plot_cols) +
       ggplot2::scale_linetype_manual(values = plot_linetypes) +
       xlab("FAR") +
@@ -230,13 +239,29 @@ autoplot.triptych <- function(object,
         axis.text.y = element_text(size = size_axisticks),
         legend.position = "bottom",
         legend.key.size = grid::unit(2, "lines"),
-        aspect.ratio = 1
+        aspect.ratio = 1,
+        strip.background = element_blank(),
+        strip.text.x = element_blank()
       ) +
       guides(
         colour = guide_legend(paste(plot_legend_title), nrow = 1),
         linetype = guide_legend(paste(plot_legend_title), nrow = 1)
       )
+    if(confidence == TRUE){
+      polygon_data = data.frame(forecast = c(df_roc$forecast,rev(df_roc$forecast)), sens = c(df_roc$sensitivities_upper,rev(df_roc$sensitivities_lower)), spec = c(df_roc$specificities_upper,rev(df_roc$specificities_lower)))
+      proc = proc + geom_polygon(data = polygon_data, aes(x = 1 - spec, y = sens, fill = forecast), alpha = 0.4, show.legend = FALSE) +
+        facet_wrap(. ~ factor(forecast, levels = FC_names), nrow = nr_rows) +
+        theme(
+          strip.background = element_blank(),
+          strip.text.x = element_blank()
+        ) +
+        scale_x_continuous(breaks = c(0,0.5,1)) +
+        scale_y_continuous(breaks = c(0,0.5,1))
+      }
+    proc
   })
+
+
 
   ###############################################################################################
   ### Plot the Murphy Diagram
@@ -272,7 +297,7 @@ autoplot.triptych <- function(object,
     }
 
     # Murphy plot
-    ggplot2::ggplot(
+    murphy = ggplot2::ggplot(
       data = Murphy_trans,
       mapping = aes(
         x = theta,
@@ -281,7 +306,13 @@ autoplot.triptych <- function(object,
         linetype = forecast
       )
     ) +
-      geom_line(linewidth = plot_linewidth) +
+      geom_line(linewidth = plot_linewidth)
+    if(confidence == TRUE ){
+      murphy = murphy + geom_ribbon(aes(x = theta, ymin = elem_score_lower, ymax = elem_score_upper, fill = after_scale(color)), alpha = 0.4,show.legend = FALSE) +
+        facet_wrap(. ~ factor(forecast, levels = FC_names), nrow = nr_rows) +
+        scale_x_continuous(breaks = c(0,0.5,1))
+    }
+    murphy = murphy +
       ggplot2::scale_color_manual(values = plot_cols) +
       ggplot2::scale_linetype_manual(values = plot_linetypes) +
       xlab(expression("Threshold " * theta)) +
@@ -298,12 +329,15 @@ autoplot.triptych <- function(object,
         axis.title = element_text(size = size_axislabels),
         axis.text.x = element_text(size = size_axisticks),
         axis.text.y = element_text(size = size_axisticks),
-        aspect.ratio = 1
+        aspect.ratio = 1,
+        strip.background = element_blank(),
+        strip.text.x = element_blank()
       ) +
       guides(
         colour = guide_legend(paste(plot_legend_title), nrow = 1),
         linetype = guide_legend(paste(plot_legend_title), nrow = 1)
       )
+    murphy
   })
 
 
@@ -325,8 +359,13 @@ autoplot.triptych <- function(object,
         UNC = uncertainty
       )
 
+
     # Set to default values if NA
-    pick_limits <- function(x) c(0, 1.1 * max(x[is.finite(x)]))
+    pick_limits <- function(x){
+      a = ifelse(confidence, 1.3,1.1)
+      c(0, a * max(x[is.finite(x)]))
+    }
+
     if (anyNA(MCB_lim)) {
       MCB_lim <- pick_limits(score_decomp$MCB)
     }
@@ -346,7 +385,6 @@ autoplot.triptych <- function(object,
       )
     })
     df_MCBDSC <- eval(expr1)
-
 
     # Check that the plot is not empty of points!
     if (!length(df_MCBDSC$is_within)) {
@@ -409,9 +447,31 @@ autoplot.triptych <- function(object,
         paste(FCs_missing, collapse = ", ")
       ))
     }
+    if(confidence == TRUE){
+      compute_r = function(theta,value,coma){
+        r_2 = (value^2 * det(coma))/(coma[2,2] * cos(theta)^2 + coma[1,1] * sin(theta)^2 - 2 * sin(theta) * cos(theta) * coma[1,2])
+        return(sqrt(r_2))
+      }
+      generate_mahalonibus_ellipse = function(samples,center, confidence = 0.5){
+        sample_m = data.matrix(samples[,c("MCB_S","DSC_S")])
+        coma = cov(sample_m)
+        dist_quant = sqrt(as.numeric(quantile(mahalanobis(x = sample_m,center = center,cov = coma),confidence)))
+        polar_coord = data.frame(theta = seq(0, 2 * pi, length.out = 1000))
+        polar_coord$r = compute_r(polar_coord$theta, value = dist_quant, coma = coma)
+        ellipse_df = data.frame(x = center[1] + cos(polar_coord$theta) * polar_coord$r, y = center[2] + sin(polar_coord$theta) * polar_coord$r)
+        return(ellipse_df)
+      }
+      ellipse_df = tibble()
+      for(name in object$FC_names){
+        center = df_MCBDSC_within[df_MCBDSC_within$forecast == name, c("MCB", "DSC")]
+        temp = generate_mahalonibus_ellipse(object$mcb_dsc_samples |> subset(forecast == name),center =  unlist(center))
+        temp$forecast = name
+        ellipse_df = rbind(ellipse_df,temp)
+      }
+    }
 
     # MCB-DSC plot
-    ggplot() +
+    mcbdsc = ggplot() +
       geom_segment(
         data = tibble(max_val = 2 * max(MCB_lim, DSC_lim)),
         mapping = aes(x = 0, y = 0, xend = max_val, yend = max_val),
@@ -492,7 +552,7 @@ autoplot.triptych <- function(object,
         hjust = 1,
         check_overlap = TRUE
       ) +
-      scale_colour_manual(values = MCBDSC_point_cols) +
+      #scale_colour_manual(values = MCBDSC_point_cols) +
       scale_x_continuous(oob = scales::oob_squish_infinite) +
       coord_cartesian(xlim = MCB_lim, ylim = DSC_lim) +
       labs(x = "MCB", y = "DSC") +
@@ -509,6 +569,10 @@ autoplot.triptych <- function(object,
           linewidth = 1
         )
       )
+    if(confidence == TRUE){
+      mcbdsc = mcbdsc + geom_path(data = ellipse_df, aes(x = x, y = y, colour = forecast))
+    }
+    mcbdsc
   })
 
 
@@ -531,7 +595,7 @@ autoplot.triptych <- function(object,
         plot_layout(guides = "collect", width = c(1, width, 1)) & theme(legend.position = "bottom") +
         ggplot2::theme(aspect.ratio = 1)
     } else {
-      p_Murphy + (p_RelDiag + theme(plot.margin = plot_margins)) + p_ROC +
+      (p_Murphy ) + (p_RelDiag +theme(plot.margin = plot_margins)) + (p_ROC ) +
         plot_layout(guides = "collect") & theme(legend.position = "bottom")
     }
   })

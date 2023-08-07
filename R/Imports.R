@@ -16,5 +16,6 @@ library(dplyr)
 library(reliabilitydiag)
 library(murphydiagram)
 library(pROC)
+library(boot)
 
 # utils.R

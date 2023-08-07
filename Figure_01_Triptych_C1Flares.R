@@ -19,7 +19,7 @@ df_RunExmpl <- df_C1full %>%
   dplyr::select(c("y", all_of(C1_FC_names)))
 
 # Figure 1 Triptych
-trpt_RunExmpl <- triptych(df_RunExmpl)
+trpt_RunExmpl <- triptych(df_RunExmpl, confidence = TRUE)
 p_RunExmpl <- ggplot2::autoplot(
   object = trpt_RunExmpl,
   Murphy_scoretype = "score",
