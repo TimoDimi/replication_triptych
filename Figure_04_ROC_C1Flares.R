@@ -1,86 +1,88 @@
-source("R/Imports.R")
-
-source("R/triptych.R")
-source("R/plot.R")
-source("R/print.R")
-source("R/summary.R")
-source("R/utils.R")
+library(triptych)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(patchwork)
 
 
-# Load an filter data
+# Load and filter data
 load(file = "data/C1_flares.rda")
 
 # Subset of forecasts for the C1 flares running example
 C1_FC_names <- c("NOAA", "SIDC", "ASSA", "MCSTAT")
-C1_FC_cols <- gg_color_hue(4)[c(2, 1, 3, 4)]
 
-df_RunExmpl <- df_C1full %>%
-  dplyr::select(c("y", all_of(C1_FC_names)))
+df_RunExmpl <- df_C1full |>
+  select(c("y", all_of(C1_FC_names)))
 
-trpt_RunExmpl <- triptych(df_RunExmpl, confidence_level = NA)
+colour_values <- c("#E69F00", "#0072B2", "#D55E00", "#CC79A7")
+names(colour_values) <- C1_FC_names
 
-#     Illustration ROC Curves     ##############################################
-ROC_RunExmlp_Raw <- ggplot2::autoplot(
-  object = trpt_RunExmpl,
-  plot_type = "ROC",
-  plot_linetypes = "solid",
-  plot_cols = C1_FC_cols,
-  PAV_ROC = FALSE,
-  size_legend = 12,
-  size_axislabels = 12,
-  size_axisticks = 12
-)
-ROC_RunExmlp_PAV <- autoplot(
-  object = trpt_RunExmpl,
-  plot_type = "ROC",
-  plot_linetypes = "solid",
-  plot_cols = C1_FC_cols,
-  size_legend = 12,
-  size_axislabels = 12,
-  size_axisticks = 12
-)
+
+
+# Figure 4 (a)
+ROC_raw <- triptych::roc(df_RunExmpl, concave = FALSE)
+AUC_raw <- purrr::map(ROC_raw, \(o) o$estimate$auc) |> unlist()
+p_ROC_a <- ROC_raw |> autoplot() &
+  scale_colour_manual(
+    values = colour_values,
+    guide = guide_legend(title = "Forecast"))
+
+
+# Figure 4 (c)
+ROC_PAV <- triptych::roc(df_RunExmpl, concave = TRUE)
+AUC_PAV <- purrr::map(ROC_PAV, \(o) o$estimate$auc) |> unlist()
+p_ROC_c <- ROC_PAV |> autoplot() &
+  scale_colour_manual(
+    values = colour_values,
+    guide = guide_legend(title = "Forecast"))
 
 
 # Annotate the ROC curve diagrams with AUC values
-annotate_auc <- function(type) {
+annotate_auc <- function(auc_values) {
   x_annot <- 0.625
   y_annot <- 0.45
   dodge <- y_annot / 5
   annot_size <- 10 / .pt
-
-  auc_values <- switch(type,
-    PAV = filter(trpt_RunExmpl$auc, PAV == TRUE),
-    Raw = filter(trpt_RunExmpl$auc, PAV == FALSE)
-  ) %>%
-    pull(auc)
 
   annotate(
     geom = "text",
     x = x_annot,
     y = y_annot - (0:4) * dodge,
     label = c("AUC:", sprintf("%0.3f", auc_values)),
-    color = c("black", C1_FC_cols),
+    color = c("black", colour_values),
     size = annot_size,
     fontface = c(1, 1, 1, 1, 1),
     hjust = 0
   )
 }
 
-ROC_RunExmlp_Raw_annot <- ROC_RunExmlp_Raw + annotate_auc("Raw")
-ROC_RunExmlp_PAV_annot <- ROC_RunExmlp_PAV + annotate_auc("PAV")
+p_ROC_a_annot <- p_ROC_a + annotate_auc(AUC_raw)
+p_ROC_c_annot <- p_ROC_c + annotate_auc(AUC_PAV)
+
+
 
 # Zoomed version of the comparison
 
 # Options to copy&paste the plotting functions form the triptych autoplot function
-plot_cols <- C1_FC_cols[c(1, 4)]
-names(plot_cols) <- C1_FC_names[c(1, 4)]
+plot_cols <- colour_values
 plot_linewidth <- 0.5
-size_legend <- 12
-size_axislabels <- 12
-size_axisticks <- 12
+size_legend <- 10
+size_axislabels <- 11
+size_axisticks <- 9
 
-df_plot <- trpt_RunExmpl$roc %>%
-  filter(forecast %in% c("NOAA", "MCSTAT")) %>%
+# Generate a data frame for plotting
+df_plot <- bind_rows(estimates(ROC_raw) %>%
+                           dplyr::filter(forecast %in% c("NOAA", "MCSTAT")) %>%
+                           mutate(sensitivities = HR,
+                                  specificities = 1-FAR,
+                                  PAV = FALSE),
+                         estimates(ROC_PAV) %>%
+                           dplyr::filter(forecast %in% c("NOAA", "MCSTAT")) %>%
+                           mutate(sensitivities = HR,
+                                  specificities = 1-FAR,
+                                  PAV = TRUE)
+) %>%
+  select(forecast, specificities, sensitivities, PAV) %>%
   arrange(forecast, desc(specificities), sensitivities) %>%
   group_by(forecast) %>%
   mutate(sensitivities_PAV_interpol = approx(
@@ -89,6 +91,11 @@ df_plot <- trpt_RunExmpl$roc %>%
     xout = 1 - specificities,
     ties = "ordered"
   )$y)
+
+
+
+
+
 
 # Difference between raw and PAV-recalibrated ROC curve
 p_ROC <- ggplot2::ggplot() +
@@ -129,8 +136,8 @@ p_ROC <- ggplot2::ggplot() +
   ) +
   scale_fill_manual(values = plot_cols) +
   scale_colour_manual(values = plot_cols) +
-  xlab("FAR") +
-  ylab("HR") +
+  xlab("False alarm rate") +
+  ylab("Hit rate") +
   ggtitle("ROC Curve") +
   theme_bw() +
   theme(
@@ -165,21 +172,22 @@ p_ROC_annot <- p_ROC +
     ymin = 0, ymax = 0.66
   )
 
-
 # Combine all three ROC plots with patchwork
 p.theme <- theme(plot.title = element_text(size = 14, hjust = 0))
 p_ROC_combined <-
-  (ROC_RunExmlp_Raw_annot + ggtitle("(a) Original ROC Curve") + p.theme) +
-    (p_ROC_annot + ggtitle("(b) Comparison") + p.theme) +
-    (ROC_RunExmlp_PAV_annot + ggtitle("(c) Concave ROC Curve") + p.theme) +
-    patchwork::plot_layout(guides = "collect") & theme(legend.position = "none")
+  (p_ROC_a_annot + ggtitle("(a) Original ROC Curve") + p.theme) +
+  (p_ROC_annot + ggtitle("(b) Comparison") + p.theme) +
+  (p_ROC_c_annot + ggtitle("(c) Concave ROC Curve") + p.theme) +
+  patchwork::plot_layout(guides = "collect") & theme(legend.position = "none")
 
 p_ROC_combined
 
 
 # Save Joint ROC Curve (smaller height due to missing legend)
 ggsave(
-  filename = "plots/Fig05_ROC_Illustration_C1Flares.pdf",
+  filename = "plots/Fig04_ROC_Illustration_C1Flares.pdf",
   plot = p_ROC_combined,
   width = 24, height = 9, units = "cm"
 )
+
+

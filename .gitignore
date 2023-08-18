@@ -1,7 +1,10 @@
-# excluded data files
+# exclude data files
 /data-raw/submissions.csv
 /data-raw/benchmarks_long.csv
 
+# exclude code and figures for the referee letter
+Figure_L01_Triptych_C1Flares_Linetypes.R
+/plots/FigReport01_triptych_linetypes.pdf
 
 # History files
 .Rhistory

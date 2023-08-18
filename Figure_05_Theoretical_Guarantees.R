@@ -1,12 +1,16 @@
+library(triptych)
 library(dplyr)
 library(ggplot2)
 library(patchwork)
 
-source("R/utils.R")
-
 
 ###########################################################################
 # Illustrations with analytical calculations
+
+# Assign colors
+sim_plot_cols <- c("#E69F00", "#0072B2", "#D55E00", "#CC79A7")
+names(sim_plot_cols) <- c("X0", "X1", "X2", "X3")
+
 
 t_seq <- seq(0, 1, length.out = 1001)
 df_t <- tibble(t = t_seq) %>%
@@ -159,11 +163,6 @@ size_axisticks <- 10
 plot_legend_title <- "Forecast"
 
 
-# Assign colors
-sim_plot_cols <- gg_color_hue(4)[c(2, 1, 3, 4)]
-names(sim_plot_cols) <- c("X0", "X1", "X2", "X3")
-
-
 for (setting_choice in c("A", "B", "C")) {
   df_setting <- filter(df_ROC, Setting == setting_choice)
   scale_colour_values <- sim_plot_cols[unique(df_setting$FC)]
@@ -172,9 +171,9 @@ for (setting_choice in c("A", "B", "C")) {
   p_ROC <- ggplot(df_setting) +
     geom_line(aes(x = FAR, y = HR, col = FC)) +
     theme_bw() +
-    xlab("FAR") +
-    ylab("HR") +
-    ggtitle("ROC Curve") +
+    xlab("False alarm rate") +
+    ylab("Hit rate") +
+    ggtitle("ROC") +
     scale_colour_manual(values = scale_colour_values) +
     theme_bw() +
     theme(
@@ -203,9 +202,9 @@ for (setting_choice in c("A", "B", "C")) {
   p_Murphy <- ggplot(df_Murphy) +
     geom_line(aes(x = theta, y = el_score, col = FC)) +
     theme_bw() +
-    xlab(expression("Threshold " * theta)) +
+    xlab("Threshold value") +
     ylab("Mean elementary score") +
-    ggtitle("Murphy Curve") +
+    ggtitle("Murphy") +
     scale_colour_manual(values = scale_colour_values) +
     theme_bw() +
     theme(
@@ -224,15 +223,14 @@ for (setting_choice in c("A", "B", "C")) {
   # Manual Reliability Diagram
   p_RelDiag <- ggplot(df_setting) +
     geom_col(aes(x = t, y = point_mass), width = 0.05, fill = "black") +
-    geom_line(aes(x = t, y = density_rel), col = "blue") +
-    geom_ribbon(aes(x = t, ymin = 0, ymax = density_rel), fill = "blue", alpha = 0.2) +
+    geom_line(aes(x = t, y = density_rel), col = "darkgray") +
+    geom_ribbon(aes(x = t, ymin = 0, ymax = density_rel), fill = "darkgray", alpha = 0.4) +
     geom_line(aes(x = t, y = CEP, col = FC)) +
     geom_point(aes(x = t, y = CEP_point, col = FC), size = 2, alpha = 1, show.legend = FALSE) +
-    # facet_grid(rows="FC") +
     facet_wrap(~FC, nrow = 2) +
     xlab("Forecast value") +
-    ylab("CEP") +
-    ggtitle("Reliability Diagram") +
+    ylab("Conditional event probability") +
+    ggtitle("Reliability") +
     scale_x_continuous(breaks = c(0, 0.5, 1)) +
     scale_y_continuous(breaks = c(0, 0.5, 1)) +
     scale_colour_manual(values = scale_colour_values) +
@@ -247,7 +245,7 @@ for (setting_choice in c("A", "B", "C")) {
       axis.title = element_text(size = size_axislabels),
       axis.text.x = element_text(size = size_axisticks),
       axis.text.y = element_text(size = size_axisticks),
-      axis.text.y.right = element_text(color = "blue"),
+      axis.text.y.right = element_text(color = "darkgray"),
       legend.position = "bottom",
       legend.key.size = grid::unit(2, "lines"),
       aspect.ratio = 1
@@ -262,10 +260,18 @@ for (setting_choice in c("A", "B", "C")) {
   p_triptych <- p_Murphy + (p_RelDiag + theme(plot.margin = plot_margins)) + p_ROC +
     plot_layout(guides = "collect") & theme(legend.position = "bottom")
 
+  # Rename the x-axis in the Murphy diagram
+  rename_Murphy_axis <- function(p_patchwork) {
+    p_patchwork[[1]] <- p_patchwork[[1]] + xlab(expression("Threshold " * theta))
+    p_patchwork
+  }
+
+  p_triptych <- rename_Murphy_axis(p_triptych)
+
   p_triptych
 
   ggsave(
-    filename = paste0("./plots/Fig07_", setting_choice, "_PopQuantities.pdf"),
+    filename = paste0("./plots/Fig05_", setting_choice, "_PopQuantities.pdf"),
     plot = p_triptych,
     width = 24, height = 10.5, units = "cm"
   )

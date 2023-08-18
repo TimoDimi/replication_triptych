@@ -1,42 +1,36 @@
-source("R/Imports.R")
-
-source("R/triptych.R")
-source("R/plot.R")
-source("R/print.R")
-source("R/summary.R")
-source("R/utils.R")
+library(triptych)
+library(ggplot2)
+library(dplyr)
+library(patchwork)
 
 
 ### Figure 2a) MCB-DSC Plot for the C1 Solar Flares
-load(file = "data/C1_flares.rda")
-trpt_C1full <- triptych(df_C1full, confidence_level = NA)
-summary(trpt_C1full)
 
-# Plot colors
-MCBDSC_point_cols <- c(
-  "ASSA" = gg_color_hue(4)[3],
+# Load and filter data
+load(file = "data/C1_flares.rda")
+
+colour_values <- c("#E69F00", "#0072B2", "#D55E00", "#CC79A7")
+
+MCBDSC_point_cols_C1 <- c(
+  "ASSA" = colour_values[3],
   "CLIM120" = "black",
   "DAFFS" = "black",
   "DAFFS-G" = "black",
   "MCEVOL" = "black",
-  "MCSTAT" = gg_color_hue(4)[4],
+  "MCSTAT" = colour_values[4],
   "NICT" = "black",
-  "NOAA" = gg_color_hue(4)[2],
-  "SIDC" = gg_color_hue(4)[1]
+  "NOAA" = colour_values[1],
+  "SIDC" = colour_values[2]
 )
 
-# MCB DSC Plot for C1 flares
-p_C1_MCBDSC <- ggplot2::autoplot(
-  object = trpt_C1full,
-  plot_type = "MCBDSC",
-  MCBDSC_point_cols = MCBDSC_point_cols,
-  MCBDSC_MCB_xlim = c(0, 0.05),
-  size_axislabels = 12
-) +
+p_MCBDSC_C1 <- mcbdsc(df_C1full) |>
+  autoplot(
+    colour_values = MCBDSC_point_cols_C1,
+    colour_unc = "#009E73",
+    MCB_lim = c(0, 0.05),
+    size_axislabels = 12) +
   ggtitle("(a) Class C1.0+ Solar Flares") +
   theme(plot.title = element_text(size = 14, hjust = 0))
-
-p_C1_MCBDSC
 
 
 
@@ -45,20 +39,20 @@ p_C1_MCBDSC
 
 load("data/FFC_JobTraining.rda")
 
-trpt.jobtrain.full <- triptych(FFC.jobtrain.full, confidence_level = NA)
+mcbdsc_jobtrain <- mcbdsc(FFC.jobtrain.full)
 
 # Set point colors
-is_benchmark <- grepl("^benchmark", trpt.jobtrain.full$FC_names)
-names(is_benchmark) <- trpt.jobtrain.full$FC_names
-MCBDSC_point_cols_JobTrain <- ifelse(is_benchmark, gg_color_hue(5)[3], "black")
+is_benchmark <- grepl("^benchmark", names(mcbdsc_jobtrain))
+names(is_benchmark) <- names(mcbdsc_jobtrain)
+MCBDSC_point_cols_JobTrain <- ifelse(is_benchmark, "#009E73", "black")
 
-MCBDSC_JobTrain <- autoplot(
-  object = trpt.jobtrain.full,
-  plot_type = "MCBDSC",
-  MCBDSC_MCB_xlim = c(0, 0.011),
-  MCBDSC_point_cols = MCBDSC_point_cols_JobTrain,
-  size_axislabels = 12
-) +
+
+p_MCBDSC_jobtrain <- mcbdsc_jobtrain |>
+  autoplot(
+    colour_values = MCBDSC_point_cols_JobTrain,
+    colour_unc = "#009E73",
+    MCB_lim = c(0, 0.011),
+    size_axislabels = 12) +
   ggtitle("(b) Job Training in Fragile Families Challenge") +
   theme(plot.title = element_text(size = 14, hjust = 0))
 
@@ -66,6 +60,10 @@ MCBDSC_JobTrain <- autoplot(
 ### Combine (a) and (b) and save jointly
 ggsave(
   filename = "plots/Fig02_MCBDSC_Illustration.pdf",
-  plot = p_C1_MCBDSC + MCBDSC_JobTrain,
+  plot = p_MCBDSC_C1 + p_MCBDSC_jobtrain,
   width = 24, height = 12.5, units = "cm"
 )
+
+
+
+

@@ -4,6 +4,11 @@ library(patchwork)
 library(dplyr)
 library(murphydiagram)
 
+
+# Color values
+colour_values_crossings <- c("X1" = "#D55E00",
+                             "X2" = "#0072B2")
+
 # generate calibrated example
 n1 <- 150
 n0 <- 100
@@ -103,10 +108,11 @@ gg_ROC <- ggplot() +
     aspect.ratio = 1
   ) +
   labs(
-    x = "FAR",
-    y = "HR",
-    title = "(a) ROC Curve"
-  )
+    x = "False alarm rate",
+    y = "Hit rate",
+    title = "(a) ROC"
+  ) +
+  scale_colour_manual(values = colour_values_crossings)
 
 
 # Murphy diagrams
@@ -138,8 +144,9 @@ gg_Murphy <- ggplot() +
   labs(
     x = expression("Threshold" ~ theta),
     y = "Mean elementary score",
-    title = "(b) Murphy Curve"
-  )
+    title = "(b) Murphy"
+  ) +
+  scale_colour_manual(values = colour_values_crossings)
 
 
 # Unconditional distributions
@@ -191,7 +198,8 @@ gg_CDF <- ggplot() +
     x = "Forecast value",
     y = "Level",
     title = "(c) Unconditional CDF/Quantile Function"
-  )
+  ) +
+  scale_colour_manual(values = colour_values_crossings)
 
 gg_composite <- gg_ROC +
   gg_Murphy +
@@ -205,7 +213,7 @@ gg_composite <- gg_ROC +
   theme(legend.position = "bottom")
 
 ggsave(
-  filename = "plots/Fig13_Crossingpoints.pdf",
+  filename = "plots/Fig12_Crossingpoints.pdf",
   plot = gg_composite,
   width = 24, height = 17.9, units = "cm"
 )
