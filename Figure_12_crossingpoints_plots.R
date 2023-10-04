@@ -1,8 +1,7 @@
-library(pROC)
+library(triptych)
 library(ggplot2)
 library(patchwork)
 library(dplyr)
-library(murphydiagram)
 
 
 # Color values
@@ -27,44 +26,17 @@ x1 <- getX(w1_0, w1_1)
 x2 <- getX(w2_0, w2_1)
 
 # ROC calculations
-r1 <- roc(y, x1, direction = "<")
-r2 <- roc(y, x2, direction = "<")
-ROC_curves <- dplyr::bind_rows(
-  tibble(
-    FAR = 1 - r1$specificities,
-    HR = r1$sensitivities,
-    Forecast = "X1"
-  ),
-  tibble(
-    FAR = 1 - r2$specificities,
-    HR = r2$sensitivities,
-    Forecast = "X2"
-  )
-) |> arrange(Forecast, FAR, HR)
-
+ROC_curves <- roc(list(X1 = x1, X2 = x2, y = y)) |>
+  estimates() |>
+  relocate(Forecast = forecast, .after = last_col()) |>
+  arrange(Forecast, FAR, HR)
 
 # Murphy calculations
-mean_elem_score <- function(theta, x, y) {
-  mean(murphydiagram::extremal_score(
-    x = x,
-    y = y,
-    theta = theta,
-    functional = "expectile",
-    alpha = 0.5
-  ))
-}
 mdf <- bind_rows(
-  tibble(
-    Forecast = "X1",
-    theta = sort(unique(c(x1, y))),
-    elem_score = 4 * sapply(theta, mean_elem_score, x = x1, y = y)
-  ),
-  tibble(
-    Forecast = "X2",
-    theta = sort(unique(c(x2, y))),
-    elem_score = 4 * sapply(theta, mean_elem_score, x = x2, y = y)
-  )
-)
+  murphy(list(X1 = x1, y = y)) |> estimates(at = sort(unique(c(x1, y)))),
+  murphy(list(X2 = x2, y = y)) |> estimates(at = sort(unique(c(x2, y))))
+) |>
+  rename(Forecast = forecast, theta = knot, elem_score = mean_score)
 
 # CDF calculations
 distdf <- bind_rows(

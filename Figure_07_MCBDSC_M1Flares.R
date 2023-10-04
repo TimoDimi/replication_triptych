@@ -39,7 +39,7 @@ MCBDSC_point_cols_M1 <- c(
 )
 
 
-# Figure 8: Brier and Log Score MCB-DSC Plots.
+# Figure 7: Brier and Log Score MCB-DSC Plots.
 MCBDSC_M1_BrierScore <- mcbdsc(df_M1full) |>
   autoplot(
     MCBDSC_repel = TRUE,
@@ -59,7 +59,7 @@ MCBDSC_M1_LogScore <- mcbdsc(df_M1full, score = "log_score") |>
     size_axislabels = 12
     ) +
   annotate("text", x = 0.2, y = 0.0405, label = "MAG4VWF", size = 3, hjust = 1) +
-  ggtitle("(a) Logarithmic Score") +
+  ggtitle("(b) Logarithmic Score") +
   theme(plot.title = element_text(size = 14, hjust = 0))
 
 MCBDSC_M1_BrierLogScores <- MCBDSC_M1_BrierScore + MCBDSC_M1_LogScore

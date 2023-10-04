@@ -6,21 +6,34 @@ Timo Dimitriadis and Alexander I. Jordan
 
 The code in this replication material generates the 12 figures and 3 tables for
 the paper "Evaluating Probabilistic Classifiers: The Triptych".
-Each figure is generated separately by its corresponding script file
-`Figure[xx]*.R`.
+Each figure and table is generated separately by its corresponding script file
+`Figure_[xx]_*.R` or `Table_[xx]_*.R`, respectively.
 
 The main contents of the repository are the following:
 
 - `plots/`: folder of generated plots as PDF files
+- `tables/`: folder of generated tables as txt files
 - `data-raw/`: folder of raw data files and the functions for processing them
 - `data/`: folder of processed data files
-- `Figure[xx]*.R`: R scripts to create the respective figures
+- `Figure_[xx]_*.R`: R scripts to create the respective figures
+- `Table_[xx]_*.R`: R scripts to create the respective tables
 
 
-The content of Tables 1 and 2 are printed to the console by running
-`Figure_01_Triptych_C1Flares.R` and the content of Table 3 is obtained by running
-`Figure_09_Triptych_SPF.R`.
+## Instructions & computational requirements.
 
+All file paths are relative to the root of the replication package. Please set your working directory accordingly, or open the `.Rproj` file using RStudio.
+
+The analysis files `Figure_[xx]_*.R` and `Table_[xx]_*.R` can be run individually, in any order.
+
+These analyses were run on R 4.3.1, and we explicitly use the following packages in the analysis files: `triptych` (0.1.2), `ggplot2` (3.4.3), `patchwork` (1.1.3), `dplyr` (1.1.3), `tidyr` (1.3.0), `purrr` (1.0.2), `grid` (base R), `lubridate` (1.9.2).
+
+A comprehensive list of dependencies can be found in the `renv.lock` file. For a convenient setup in a (local) R session, we recommend using the `renv` package. The following steps are required once:
+```
+# install.packages("renv")
+renv::activate()
+renv::restore() # install dependencies
+renv::status() # check environment
+```
 
 ## Data availability and provenance
 
@@ -44,36 +57,6 @@ The forecasts (submissions) of the 160 teams together with the
 realizations originate from Salganik et al (2020, https://doi.org/10.7910/DVN/CXSECU), located in the `data/derived/submissions.csv.zip` file. The 9 benchmark forecasts have to be generated separately by obtaining data files from
 https://opr.princeton.edu/archive/ as described in Salganik et al (2020).
 We prepare the FFC data using these two (in this repository unavailable) files within the script `prepare_FragileFamilyChallenge.R`.
-
-
-## Instructions & computational requirements.
-
-The analysis files `Figure[xx]*.R` can be run individually, in any order. Set the working
-directory to the root of the replication package, or open the `.Rproj` file
-using RStudio.
-
-The software versions that were used to run these analyses are
-
-- R 4.3.1
-  - `triptych` (0.1.0)
-  - `ggplot2` (3.4.3)
-  - `patchwork` (1.1.3)
-  - `tidyr` (1.3.0)
-  - `vctrs` (0.6.3)
-  - `murphydiagram` (0.12.2)
-  - `dplyr` (1.1.2)
-  - `monotone` (0.1.2)
-  - `pROC` (1.18.4)
-  - `purrr` (1.0.2)
-  - `tibble` (3.2.1)
-  - `rlang` (1.1.1)
-  - `class` (7.3-22)
-  - `scales` (1.2.1)
-  - `geomtextpath` (0.1.1)
-  - `ggrepel` (0.9.3)
-  - `lubridate` (1.9.2)
-  
-For a convenient package setup in a (local) R session, use the `checkpoint` package (https://cran.r-project.org/package=checkpoint) with the command `checkpoint("2023-08-18")` (or source the file `checkpoint.R`) before running any of the analysis scripts.
 
 
 ## References

@@ -3,6 +3,8 @@ library(ggplot2)
 library(dplyr)
 library(patchwork)
 
+set.seed(20231005) # reproducible resampling in triptych::add_confidence()
+
 # Load and filter data
 load(file = "data/C1_flares.rda")
 

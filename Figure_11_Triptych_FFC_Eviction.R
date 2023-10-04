@@ -3,6 +3,7 @@ library(ggplot2)
 library(dplyr)
 library(patchwork)
 
+set.seed(20231005) # reproducible resampling in triptych::add_consistency()
 
 # Load  data
 load(file = "data/FFC_Eviction.rda")

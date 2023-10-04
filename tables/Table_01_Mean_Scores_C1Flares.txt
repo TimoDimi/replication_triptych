@@ -1,0 +1,7 @@
+# A tibble: 4 × 4
+  forecast Brier_score log_score MR_score
+  <chr>          <dbl>     <dbl>    <dbl>
+1 NOAA           0.144     0.449    0.205
+2 SIDC           0.172     0.515    0.263
+3 ASSA           0.184   Inf        0.273
+4 MCSTAT         0.193     0.587    0.275

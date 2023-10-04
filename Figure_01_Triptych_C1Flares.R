@@ -1,11 +1,9 @@
-# Install the triptych package from Github:
-# devtools::install_github("aijordan/triptych")
-
 library(triptych)
 library(ggplot2)
 library(dplyr)
 library(patchwork)
 
+set.seed(20231005) # reproducible resampling in triptych::add_consistency()
 
 # Load and filter data
 load(file = "data/C1_flares.rda")
@@ -44,33 +42,3 @@ ggsave(
   plot = p_RunExmpl,
   width = 24, height = 10.5, units = "cm"
 )
-
-
-
-# Table 1
-estimates(mcbdsc(df_RunExmpl)) |>
-  select(forecast, mean_score) |>
-  rename(Brier_Score = mean_score) |>
-  full_join(
-    estimates(mcbdsc(df_RunExmpl, score="log_score")) |>
-      select(forecast, mean_score),
-    by="forecast") |>
-  full_join(
-    estimates(mcbdsc(df_RunExmpl, score="MR_score")) |>
-      select(forecast, mean_score),
-    by="forecast")
-
-
-# Table 2
-mcbdsc(df_RunExmpl) |>
-  estimates() |>
-  mutate(across(mean_score:UNC, \(x) round(x, digits = 3)))
-mcbdsc(df_RunExmpl, score = "log_score") |>
-  estimates() |>
-  mutate(across(mean_score:UNC, \(x) round(x, digits = 3)))
-mcbdsc(df_RunExmpl, score = "MR_score") |>
-  estimates() |>
-  mutate(across(mean_score:UNC, \(x) round(x, digits = 3)))
-
-
-

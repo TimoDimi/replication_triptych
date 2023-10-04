@@ -2,6 +2,7 @@ library(triptych)
 library(dplyr)
 library(ggplot2)
 library(patchwork)
+requireNamespace("grid")
 
 
 ###########################################################################
@@ -114,7 +115,7 @@ Fj <- function(x, j) {
 df_C <- df_t %>%
   bind_rows(tibble(t = c(0, 1))) %>%
   arrange(t) %>%
-  summarize(
+  reframe(
     t = rep(t, each = length(j_seq)),
     j = rep(j_seq, n()),
     FC = paste0("X", rep(j_seq, n()))
@@ -222,11 +223,17 @@ for (setting_choice in c("A", "B", "C")) {
 
   # Manual Reliability Diagram
   p_RelDiag <- ggplot(df_setting) +
-    geom_col(aes(x = t, y = point_mass), width = 0.05, fill = "black") +
     geom_line(aes(x = t, y = density_rel), col = "darkgray") +
     geom_ribbon(aes(x = t, ymin = 0, ymax = density_rel), fill = "darkgray", alpha = 0.4) +
     geom_line(aes(x = t, y = CEP, col = FC)) +
-    geom_point(aes(x = t, y = CEP_point, col = FC), size = 2, alpha = 1, show.legend = FALSE) +
+    {
+      if (setting_choice == "B") {
+        list(
+          geom_col(aes(x = t, y = point_mass), data = filter(df_setting, !is.na(point_mass)), width = 0.05, fill = "black"),
+          geom_point(aes(x = t, y = CEP_point, col = FC), data = filter(df_setting, !is.na(CEP_point)), size = 2, alpha = 1, show.legend = FALSE)
+        )
+      }
+    } +
     facet_wrap(~FC, nrow = 2) +
     xlab("Forecast value") +
     ylab("Conditional event probability") +
