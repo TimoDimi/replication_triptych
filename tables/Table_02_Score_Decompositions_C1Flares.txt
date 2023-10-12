@@ -1,0 +1,28 @@
+Brier Score
+# A tibble: 4 × 5
+  forecast mean_score   MCB   DSC   UNC
+  <chr>         <dbl> <dbl> <dbl> <dbl>
+1 NOAA          0.144 0.006 0.073 0.211
+2 SIDC          0.172 0.014 0.053 0.211
+3 ASSA          0.184 0.007 0.035 0.211
+4 MCSTAT        0.193 0.034 0.052 0.211
+
+
+Logarithmic Score
+# A tibble: 4 × 5
+  forecast mean_score     MCB   DSC   UNC
+  <chr>         <dbl>   <dbl> <dbl> <dbl>
+1 NOAA          0.449   0.027 0.191 0.614
+2 SIDC          0.515   0.036 0.135 0.614
+3 ASSA        Inf     Inf     0.085 0.614
+4 MCSTAT        0.587   0.101 0.128 0.614
+
+
+Misclassification Rate
+# A tibble: 4 × 5
+  forecast mean_score   MCB   DSC   UNC
+  <chr>         <dbl> <dbl> <dbl> <dbl>
+1 NOAA          0.205 0.004 0.102 0.303
+2 SIDC          0.263 0.038 0.078 0.303
+3 ASSA          0.273 0.006 0.036 0.303
+4 MCSTAT        0.275 0.042 0.071 0.303

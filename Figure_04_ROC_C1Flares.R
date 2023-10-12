@@ -3,6 +3,7 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(patchwork)
+requireNamespace("purrr")
 
 
 # Load and filter data
